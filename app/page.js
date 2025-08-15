@@ -1,103 +1,211 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import html2canvas from "html2canvas";
+import axios from "axios";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [nameEnglish, setNameEnglish] = useState("");
+  const [nameMarathi, setNameMarathi] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // Convert English to Marathi
+  const convertToMarathi = async (engText) => {
+    if (!engText.trim()) {
+      setNameMarathi("");
+      return;
+    }
+    try {
+      const res = await axios.get(
+        `https://inputtools.google.com/request?text=${encodeURIComponent(
+          engText
+        )}&itc=mr-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8`
+      );
+      if (res.data && res.data[0] === "SUCCESS") {
+        setNameMarathi(res.data[1][0][1][0]);
+      }
+    } catch (err) {
+      console.error("Translation failed", err);
+    }
+  };
+
+  const shareOnWhatsApp = async () => {
+  const element = document.getElementById("invitationCard");
+  try {
+    const canvas = await html2canvas(element, { scale: 2 });
+    const dataURL = canvas.toDataURL("image/png");
+
+    // Download image for desktop
+    const link = document.createElement("a");
+    link.href = dataURL;
+    link.download = `${nameMarathi || "invitation"}.png`;
+    link.click();
+
+    // Copy image to clipboard (mobile supported browsers)
+    if (navigator.clipboard && navigator.clipboard.write) {
+      const blob = await (await fetch(dataURL)).blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob })
+      ]);
+      alert("Invitation image copied! Paste it in WhatsApp now.");
+    } else {
+      alert("Image downloaded! Share it manually on WhatsApp.");
+    }
+  } catch (err) {
+    console.error("Error generating image", err);
+  }
+};
+
+
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "20px",
+        background: "#fff8e7",
+        minHeight: "100vh",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "26px",
+          color: "#8b0000",
+          fontWeight: "bold",
+          marginBottom: "10px",
+        }}
+      >
+        💍 सगाई निमंत्रण 💍
+      </h1>
+
+      {/* Name Input */}
+      <input
+        type="text"
+        placeholder="Enter Receiver's Name (English)"
+        value={nameEnglish}
+        onChange={(e) => {
+          setNameEnglish(e.target.value);
+          convertToMarathi(e.target.value);
+        }}
+        style={{
+          padding: "10px",
+          borderRadius: "8px",
+          border: "2px solid #8b0000",
+          fontSize: "15px",
+          marginBottom: "15px",
+          width: "250px",
+          color: "black",
+          backgroundColor: "white",
+          outline: "none",
+        }}
+      />
+
+      {/* Card */}
+      <div
+        id="invitationCard"
+        style={{
+          backgroundImage: "url('backimg.png')",
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          width: "100%",
+          maxWidth: "300px",
+          aspectRatio: "1 / 2",
+          margin: "20px auto",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: "40px 60px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Content Wrapper */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center", // ✅ centers horizontally
+            textAlign: "center",
+            width: "100%",
+            margin: "60px auto",
+            padding: "20px",
+          }}
+        >
+          <h3
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              fontFamily: "'Playfair Display', serif",
+              marginBottom: "8px",
+              fontSize: "clamp(14px, 3.5vw, 18px)",
+              marginBottom: "4px",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {nameMarathi || "मित्रा"},
+          </h3>
+
+          {/* Couples Name Centered */}
+          <p
+            style={{
+              whiteSpace: "nowrap",
+              fontSize: "clamp(14px, 3.2vw, 18px)",
+              fontWeight: "bold",
+              color: "yellow",
+              marginBottom: "8px",
+              textAlign: "center",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+              lineHeight: "1.4",
+              fontFamily: "'Great Vibes', cursive",
+            }}
           >
-            Read our docs
-          </a>
+            पल्केश रामटेके ❤️ अश्विनी बन्सोड
+          </p>
+
+          <p
+            style={{
+              fontSize: "clamp(10px, 2.8vw, 14px)",
+              fontWeight: "bold",
+              lineHeight: "1.4",
+              color: "yellow",
+              marginBottom: "8px",
+            }}
+          >
+            आपल्याला आमच्या सगाई सोहळ्याला सहर्ष निमंत्रण!<br />
+            📅 दिनांक: १७ ऑगस्ट २०२५ | रविवार<br />
+            ⏰ वेळ: दुपारी ३ वाजता पासून<br />
+            📍 स्थळ: दर्शन सेलिब्रेशन, ओल्ड कामठी रोड,<br />
+            जवळ भवानी माता मंदिर, कलमणा, नागपूर,<br />
+            महाराष्ट्र - ४४००२२६
+          </p>
+
+          <p
+            style={{
+              marginTop: "6px",
+              color: "skyblue",
+              fontWeight: "bold",
+              fontSize: "clamp(10px, 2.5vw, 14px)",
+            }}
+          >
+            आपली उपस्थिती आम्हाला आनंद देईल!
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* WhatsApp Share Button */}
+      <button
+        onClick={shareOnWhatsApp}
+        style={{
+          background: "rgb(37, 211, 102)",
+          color: "white",
+          padding: "12px 20px",
+          borderRadius: "8px",
+          border: "none",
+          cursor: "pointer",
+          fontWeight: "bold",
+          marginTop: "10px",
+        }}
+      >
+        📤 Share on WhatsApp
+      </button>
     </div>
   );
 }
